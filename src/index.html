@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<!-- Coding By CodingNepal - www.codingnepalweb.com -->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <title>ChatGPT Clone in JavaScript | CodingNepal</title>
+  <!-- <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}"> -->
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Google Fonts Link For Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <script type="text/javascript" src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
+  <!-- <script src="script.js" defer></script> -->
+  <style>
+    /* Import Google font - Poppins */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+    :root {
+      --text-color: #FFFFFF;
+      --icon-color: #ACACBE;
+      --icon-hover-bg: #5b5e71;
+      --placeholder-color: #dcdcdc;
+      --outgoing-chat-bg: #343541;
+      --incoming-chat-bg: #444654;
+      --outgoing-chat-border: #343541;
+      --incoming-chat-border: #444654;
+    }
+    .light-mode {
+      --text-color: #343541;
+      --icon-color: #a9a9bc;
+      --icon-hover-bg: #f1f1f3;
+      --placeholder-color: #6c6c6c;
+      --outgoing-chat-bg: #FFFFFF;
+      --incoming-chat-bg: #F7F7F8;
+      --outgoing-chat-border: #FFFFFF;
+      --incoming-chat-border: #D9D9E3;
+    }
+    body {
+      background: var(--outgoing-chat-bg);
+      display: flex;
+      justify-content: space-between; /* Added */
+    }
+
+    /* Chats container styling */
+    .chat-container {
+      overflow-y: auto;
+      max-height: 100vh;
+      padding-bottom: 150px;
+      padding-left: 25%;
+      width:90%;
+    }
+    :where(.chat-container, textarea)::-webkit-scrollbar {
+      width: 6px;
+    }
+    :where(.chat-container, textarea)::-webkit-scrollbar-track {
+      background: var(--incoming-chat-bg);
+      border-radius: 25px;
+    }
+    :where(.chat-container, textarea)::-webkit-scrollbar-thumb {
+      background: var(--icon-color);
+      border-radius: 25px;
+    }
+    .default-text {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      height: 70vh;
+      padding: 0 10px;
+      text-align: center;
+      color: var(--text-color);
+    }
+    .default-text h1 {
+      font-size: 3.3rem;
+    }
+    .default-text p {
+      margin-top: 10px;
+      font-size: 1.1rem;
+    }
+    .chat-container .chat {
+      padding: 25px 10px;
+      display: flex;
+      justify-content: center;
+      color: var(--text-color);
+    }
+    .chat-container .chat.outgoing {
+      background: var(--outgoing-chat-bg);
+      border: 1px solid var(--outgoing-chat-border);
+    }
+    .chat-container .chat.incoming {
+      background: var(--incoming-chat-bg);
+      border: 1px solid var(--incoming-chat-border);
+    }
+    .chat .chat-content {
+      display: flex;
+      max-width: 1200px;
+      width: 100%;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+    span.material-symbols-rounded {
+      user-select: none;
+      cursor: pointer;
+    }
+    .chat .chat-content span {
+      cursor: pointer;
+      font-size: 1.3rem;
+      color: var(--icon-color);
+      visibility: hidden;
+    }
+    .chat:hover .chat-content:not(:has(.typing-animation), :has(.error)) span {
+      visibility: visible;
+    }
+    .chat .chat-details {
+      display: flex;
+      align-items: center;
+    }
+    .chat .chat-details img {
+      width: 35px;
+      height: 35px;
+      align-self: flex-start;
+      object-fit: cover;
+      border-radius: 2px;
+    }
+    .chat .chat-details p {
+      white-space: pre-wrap;
+      font-size: 1.05rem;
+      padding: 0 50px 0 25px;
+      word-break: break-word;
+    }
+    .chat .chat-details p.error {
+      color: #e55865;
+    }
+    .chat .typing-animation {
+      padding-left: 25px;
+      display: inline-flex;
+    }
+    .typing-animation .typing-dot {
+      height: 7px;
+      width: 7px;
+      border-radius: 50%;
+      margin: 0 3px;
+      opacity: 0.7;
+      background: var(--text-color);
+      animation: animateDots 1.5s var(--delay) ease-in-out infinite;
+    }
+    .typing-animation .typing-dot:first-child {
+      margin-left: 0;
+    }
+    @keyframes animateDots {
+      0%,44% {
+        transform: translateY(0px);
+      }
+      28% {
+        opacity: 0.4;
+        transform: translateY(-6px);
+      }
+      44% {
+        opacity: 0.2;
+      }
+    }
+
+    /* Typing container styling */
+    .typing-container {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      display: flex;
+      padding: 20px 10px;
+      justify-content: center;
+      background: var(--outgoing-chat-bg);
+      border-top: 1px solid var(--incoming-chat-border);
+    }
+    .typing-container .typing-content {
+      display: flex;
+      max-width: 950px;
+      width: 100%;
+      align-items: flex-end;
+    }
+    .typing-container .typing-textarea {
+      width: 100%;
+      display: flex;
+      position: relative;
+    }
+    .typing-textarea textarea {
+      resize: none;
+      height: 55px;
+      width: 100%;
+      border: none;
+      padding: 15px 45px 15px 20px;
+      color: var(--text-color);
+      font-size: 1rem;
+      border-radius: 4px;
+      max-height: 250px;
+      overflow-y: auto;
+      background: var(--incoming-chat-bg);
+      outline: 1px solid var(--incoming-chat-border);
+    }
+    .typing-textarea textarea::placeholder {
+      color: var(--placeholder-color);
+    }
+    .typing-content span {
+      width: 55px;
+      height: 55px;
+      display: flex;
+      border-radius: 4px;
+      font-size: 1.35rem;
+      align-items: center;
+      justify-content: center;
+      color: var(--icon-color);
+    }
+    .typing-textarea span {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      visibility: hidden;
+    }
+    .typing-textarea textarea:valid ~ span {
+      visibility: visible;
+    }
+    .typing-controls {
+      display: flex;
+    }
+    .typing-controls span {
+      margin-left: 7px;
+      font-size: 1.4rem;
+      background: var(--incoming-chat-bg);
+      outline: 1px solid var(--incoming-chat-border);
+    }
+    .typing-controls span:hover {
+      background: var(--icon-hover-bg);
+    }
+
+    .chart-panel {
+      width: 25%; /* Adjust as needed */
+      height: 100vh;
+      background: #222;
+      color: #fff;
+      padding: -20px;
+      overflow-y: auto;
+    }
+    /* Session panel styling */
+    .session-panel {
+      width: 25%; /* Adjust as needed */
+      height: 100vh;
+      background: #222;
+      color: #fff;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .session-panel h2 {
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+    }
+
+    .session-panel ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .session-panel li {
+      font-size: 1.4rem;
+      padding: 10px 0;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+   /* .session-panel li.active {
+      background: #333;
+    }
+    */
+    .session-panel li.highlighted {
+      color: black;
+      background-color: gray;
+    }
+
+    .session-panel li:hover {
+      background: #444;
+    }
+
+    /* Adjustments for smaller screens */
+    @media screen and (max-width: 600px) {
+      .session-panel {
+        width: 100%; /* Adjust as needed */
+        padding-right: 0;
+        padding-left: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        /* Any additional adjustments for small screens */
+      }
+    }
+      .chat-container {
+        padding-left: 0;
+        width: 100%;
+      }
+      .popup {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5); /* Dim background */
+      }
+      
+      .popup-content {
+        background-color: gray;
+      /*  margin: 15% auto; */
+        padding: 20px;
+        height: 85%;
+        margin-top: 4%;
+        border: 1px solid #888;
+       /* width: 80%;*/
+      }
+      
+      .close {
+        color: #aaa;
+       /* float: right;*/
+        font-size: 28px;
+        font-weight: bold;
+      }
+      
+      .close:hover,
+      .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .chartTypeSelectioncss {
+        position: absolute;
+    /* bottom: 10px; */
+    /* left: 10px; */
+    z-index: 999;
+    top: 80px;
+    left: 60px;
+    font-weight: bold;
+    color: white;
+}
+.loading-indicator {
+  display: none; /* Initially hidden */
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent white background */
+  z-index: 9999; /* Ensure it's above other elements */
+}
+
+.loading-indicator::after {
+  content: ''; /* Required for pseudo-elements */
+  width: 50px;
+  height: 50px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 5px solid #f3f3f3; /* Light grey border */
+  border-top: 5px solid #3498db; /* Blue border on top */
+  border-radius: 50%;
+  animation: spin 1s linear infinite; /* Rotate animation */
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+   /* Styles for the small box */
+.small-box {
+    width: 100px; /* Adjust width as needed */
+    height: 100px; /* Adjust height as needed */
+    background-color: lightgray;
+    position: relative;
+}
+
+/* Styles for the suggestion popup top: calc(100% + 10px);  right: calc(-100% + 10px); */
+.suggestionPopupclass {
+    display: none;
+    position: absolute;
+     /* Position the popup below the small box */
+   /* Position the popup to the right of the small box */
+    background-color: lightgray; /* Light gray background */
+    border: 1px solid gray; /* Border */
+    padding: 10px; /* Padding */
+    z-index: 999; /* Ensure popup appears above other content */
+    height: 100px;
+    width: 500px;
+    top:400px;
+    left:700px
+}
+
+    
+  </style>
+</head>
+<body>
+  <!-- Chats container -->
+  <div class="chat-container"></div>
+  <div class="session-panel" id="sr1">
+    <!-- Your session panel content goes here -->
+    <h2>Chats</h2>
+    <label for="myLabel" id="lblsessionname" hidden="true"></label>
+    <ul>
+      <!-- <li class="active">Session 1</li>
+      <li>Session 2</li>
+      <li>Session 3</li>
+      <li>Session 4</li>
+      <li>Session 5</li> -->
+    </ul>
+    <!-- Add any additional session-related content here -->
+  </div>
+  <div id="chartPopup" class="popup">
+    <div class="popup-content">
+      <span class="close" onclick="closeChartPopup()">&times;</span>
+      <div id="loadingIndicator" class="loading-indicator"></div> <!-- Loading indicator -->
+      <!-- <div class="small-box">Small Box</div> -->
+     
+      <div id="chartTypeSelection" class="chartTypeSelectioncss">
+        <input type="radio" name="chartType" value="line" onclick="updateChartType('line')" checked> Line
+        <input type="radio" name="chartType" value="bar" onclick="updateChartType('bar')"> Bar
+        <input type="radio" name="chartType" value="scatter" onclick="updateChartType('scatter')"> Scatter
+    </div>
+      <div id="chartContainer" class="canvasjs-chart-container"></div>
+    
+    </div>
+  </div>
+  <!-- Typing container -->
+  <div id="suggestionPopup" class="suggestionPopupclass">
+    <ul id="suggestionList">
+        <li onclick="selectSuggestion('How many active CLM seats does Workday have?')">How many active CLM seats does Workday have?</li>
+        <li onclick="selectSuggestion('Suggestion 2')">show  Customer Workday's transaction usage trend for last one year?</li>
+        <li onclick="selectSuggestion('Suggestion 3')">show Account: Workday, Inc. transaction usage trend for last 5 years?</div>
+        </li>
+    </ul>
+</div>
+  <div class="typing-container">
+    <div class="typing-content">
+      <div class="typing-textarea">
+        <textarea id="chat-input" spellcheck="false" placeholder="Enter a prompt here" required></textarea>
+        <span id="send-btn" class="material-symbols-rounded">send</span>
+      </div>
+      <div class="typing-controls">
+        <span id="theme-btn" class="material-symbols-rounded">light_mode</span>
+        <span id="delete-btn" class="material-symbols-rounded">delete</span>
+        <span id="list-btn" class="material-symbols-rounded">list</span>
+      </div>
+    </div>
+  </div>
+  <script>
+    function generateUniqueName() {
+      // Get current timestamp
+      const timestamp = Date.now().toString();
+  
+      // Generate random 3-digit number
+      const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  
+      // Combine timestamp and random number
+      const uniqueName = "Chat-" +timestamp.substr(-3) + random;
+  
+      return uniqueName;
+  }
+        // Load sessions when the page loads
+        window.addEventListener('DOMContentLoaded', () => {
+
+          const lblsessionnameElement = document.getElementById('lblsessionname');
+          if (lblsessionnameElement !== null) {
+            if (lblsessionnameElement.textContent.trim() === '') {
+              const uniqueName = generateUniqueName();
+              lblsessionnameElement.textContent = uniqueName;
+            }
+          }
+          loadSessions();
+
+         
+
+
+        });
+  // Function to display session data on the page
+  function displaySessions(sessions) {
+    //console.log("data")
+    const sessionList = document.querySelector('.session-panel ul');
+    sessionList.innerHTML = ''; // Clear previous session list
+    sessions.forEach(session => {
+      const li = document.createElement('li');
+      li.textContent = session.SESSIONNAME;
+      
+    //  fetch(chatUrl)
+    //            .then(response => response.json())
+      //          .then(data => {
+                    // Display chat data for the current session
+     //               displayChatData(session.SESSIONNAME, data);
+     //           })
+      //          .catch(error => console.error(`Error loading chats for session ${session.SESSIONNAME}: ${error}`));
+     // if (session.active) {
+     //   li.classList.add('active');
+    //  }
+      sessionList.appendChild(li);
+      li.addEventListener('click', () => {
+            const highlightedItems = document.querySelectorAll('.highlighted');
+            highlightedItems.forEach(item => {
+            item.classList.remove('highlighted');
+          });
+
+        // Highlight the clicked <li> element
+        li.classList.add('highlighted');   
+
+        deletefunctionality();
+        loadChatData(session.SESSIONNAME);
+    });
+    });
+  }
+
+
+// Function to select a suggestion and copy it to the input box
+function selectSuggestion(text) {
+  document.getElementById('chat-input').value = text;
+  document.getElementById('suggestionPopup').style.display = 'none'; // Close the popup
+}
+  function loadChatData(sessionName) {
+    document.getElementById('lblsessionname').textContent = sessionName;
+    const chatUrl = 'connector/getcharts/' + sessionName;
+    let answer = ''; // Declare answer as a let variable instead of const
+    fetch(chatUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Failed to load chats for session ${sessionName}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+         // console.log(data)
+         // console.log("QUESTION: " + data[0].QUESTION)
+        //  console.log("Query: " + data[0].QUERY)
+          
+            data.forEach(subdata => {
+              handleOutgoingChat(subdata.QUESTION, subdata.QUERY);
+           //     const queryUrl = 'connector/getDataframe/' + subdata.QUERY;
+            //    fetch(queryUrl)
+            //        .then(response1 => {
+             //           if (!response1.ok) {
+             //               throw new Error(`Failed to load chats for session ${userText}`);
+             //           }
+              //          return response1.text();
+             //       })
+            //        .then(data1 => {
+                      // console.log("In data1" + data1)
+                       // answer = data1.text(); // Assign value to answer
+                      //  console.log("In data12" + data1)
+              //          handleOutgoingChat(subdata.QUESTION, data1);
+              //      })
+              //      .catch(error => console.error(`Error loading chats for session ${userText}: ${error}`));
+            });
+        })
+        .catch(error => console.error(`Error loading chats for session ${sessionName}: ${error}`));
+}
+
+async function CallGenAIAPI(userText) {
+ 
+ console.log("In CallGenAIAPI");
+  const chatUrl = 'connector/getAnswers/'+document.getElementById('lblsessionname').textContent +'/'+userText; // Assuming '/connector/getchats' is the correct endpoint to fetch chats for a session
+  fetch(chatUrl)
+      .then(response => {
+          console.log('In Response');
+          if (!response.ok) {
+            console.log('In Response1');
+              throw new Error(`Failed to load chats for session ${userText}`);
+          }
+          return response.json(); ;
+      })
+      .then(data => {
+        console.log("In CallGenAIAPI chatUrl1");
+        console.log(data);
+        deletefunctionality();
+        loadChatData(document.getElementById('lblsessionname').textContent);
+
+      })
+      .catch(error => console.error(`Error loading chats for session ${userText}: ${error}`));
+}
+  // Function to load session data from the server
+  async function loadSessions() {
+    try {
+      //console.log("loadSessions")
+      const sessionList = document.querySelector('.session-panel ul');
+      method = sessionList.getAttribute('id');
+      //method = dm[0].value;
+    //  apiurl = "/" + method + "/getsessions/"
+   //   console.log(apiurl) 
+      const response = await fetch('connector/getsessions'); // Replace '/sessions' with your server endpoint
+      if (!response.ok) {
+        throw new Error('Failed to load sessions');
+      }
+      const data = await response.json();
+      displaySessions(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  function deletefunctionality()
+  {
+    // Remove the chats from local storage and call loadDataFromLocalstorage function
+    //if(confirm("Are you sure you want to delete all the chats?")) {
+        //console.log("deletefunctionality");
+        localStorage.removeItem("all-chats");
+       // console.log("deletefunctionality1");
+        loadDataFromLocalstorage();
+   // }
+  }
+
+
+
+    
+  const chatInput = document.querySelector("#chat-input");
+  const sendButton = document.querySelector("#send-btn");
+  const chatContainer = document.querySelector(".chat-container");
+  const themeButton = document.querySelector("#theme-btn");
+  const deleteButton = document.querySelector("#delete-btn");
+  const listButton = document.querySelector("#list-btn");
+
+  let userText = null;
+  const API_KEY = "4c4927a7c697459ea5896bbed6f4d84a"; // Paste your API key here
+  
+  const loadDataFromLocalstorage = () => {
+      // Load saved chats and theme from local storage and apply/add on the page
+      const themeColor = localStorage.getItem("themeColor");
+  
+      document.body.classList.toggle("light-mode", themeColor === "light_mode");
+      themeButton.innerText = document.body.classList.contains("light-mode") ? "dark_mode" : "light_mode";
+  
+      const defaultText = `<div class="default-text">
+                              <h1>EDA Bot!!</h1>
+                              <p>Ask your Product License Related question!!</p>
+                          </div>`
+  
+      chatContainer.innerHTML = localStorage.getItem("all-chats") || defaultText;
+      chatContainer.scrollTo(0, chatContainer.scrollHeight); // Scroll to bottom of the chat container
+  }
+  
+  const createChatElement = (content, className) => {
+      // Create new div and apply chat, specified class and set html content of div
+      const chatDiv = document.createElement("div");
+      chatDiv.classList.add("chat", className);
+      chatDiv.innerHTML = content;
+      return chatDiv; // Return the created chat div
+  }
+  
+  const getChatResponse = async (incomingChatDiv,answer) => {
+    //  const API_URL = "https://svc-openai-poc.openai.azure.com/";
+      const pElement = document.createElement("p");
+   // console.log("In getChatresponse" + answer);
+      // Define the properties and data for the API request
+    
+      // Send POST request to API, get response and set the reponse as paragraph element text
+      try {
+         // const response = await (await fetch(API_URL, requestOptions)).json();
+         console.log("In pelement" + answer);
+          pElement.innerHTML  = answer.trim();
+          pElement.style.maxHeight = "1000px";
+          pElement.style.overflowY = "auto";
+      } catch (error) { // Add error class to the paragraph element and set error text
+        console.log("In p error element" + answer);
+          pElement.classList.add("error");
+          pElement.textContent = "Oops! Something went wrong while retrieving the response. Please try again.";
+      }
+  
+      // Remove the typing animation, append the paragraph element and save the chats to local storage
+      incomingChatDiv.querySelector(".typing-animation").remove();
+      incomingChatDiv.querySelector(".chat-details").appendChild(pElement);
+      localStorage.setItem("all-chats", chatContainer.innerHTML);
+      chatContainer.scrollTo(0, chatContainer.scrollHeight);
+  }
+  
+  const copyResponse = (copyBtn) => {
+      // Copy the text content of the response to the clipboard
+      const reponseTextElement = copyBtn.parentElement.querySelector("p");
+      navigator.clipboard.writeText(reponseTextElement.textContent);
+      copyBtn.textContent = "done";
+      setTimeout(() => copyBtn.textContent = "content_copy", 1000);
+  }
+  
+  const showTypingAnimation = (answer) => {
+      // Display the typing animation and call the getChatResponse function
+      //<img src="/images/chatbot.jpg" alt="chatbot-img">
+      const html = `<div class="chat-content">
+                      <div class="chat-details">
+                          
+                          
+                          <img src="https://myconga-my.sharepoint.com/:i:/r/personal/cpandya_conga_com/Documents/images/chatbot.jpg?csf=1&web=1&e=lPuQC2" alt="chatbot-img">
+                          
+
+                          <div class="typing-animation">
+                              <div class="typing-dot" style="--delay: 0.2s"></div>
+                              <div class="typing-dot" style="--delay: 0.3s"></div>
+                              <div class="typing-dot" style="--delay: 0.4s"></div>
+                          </div>
+                      </div>
+                      <span onclick="copyResponse(this)" class="material-symbols-rounded">content_copy</span>
+                  </div>`;
+      // Create an incoming chat div with typing animation and append it to chat container
+      const incomingChatDiv = createChatElement(html, "incoming");
+      chatContainer.appendChild(incomingChatDiv);
+      chatContainer.scrollTo(0, chatContainer.scrollHeight);
+      getChatResponse(incomingChatDiv,answer);
+  }
+  
+  const handleOutgoingChat = (questionString,answer) => {
+      //userText = chatInput.value.trim(); // Get chatInput value and remove extra spaces
+      //if(!userText) return; // If chatInput is empty return from here
+      if (!questionString.trim()) return; // If questionString is empty or contains only whitespace, return
+      // Clear the input field and reset its height
+      chatInput.value = "";
+      chatInput.style.height = `${initialInputHeight}px`;
+    
+      const html = `<div class="chat-content">
+                      <div class="chat-details">
+                        <img src="https://myconga-my.sharepoint.com/:i:/r/personal/cpandya_conga_com/Documents/images/user.jpg?csf=1&web=1&e=MZBQoq" alt="user-img">
+
+                          <p>${questionString}</p>
+                      </div>
+                  </div>`;
+  
+      // Create an outgoing chat div with user's message and append it to chat container
+      const outgoingChatDiv = createChatElement(html, "outgoing");
+      chatContainer.querySelector(".default-text")?.remove();
+      chatContainer.appendChild(outgoingChatDiv);
+      chatContainer.scrollTo(0, chatContainer.scrollHeight);
+      setTimeout(showTypingAnimation(answer), 500);
+  }
+  const handleSendQuestion = () => {
+    userText = chatInput.value.trim(); // Get chatInput value and remove extra spaces
+    if(!userText) return; // If chatInput is empty return from here
+    CallGenAIAPI(userText);
+    // Clear the input field and reset its height
+    // Call gen ai api and insert into database
+
+}
+  
+  deleteButton.addEventListener("click", () => {
+      // Remove the chats from local storage and call loadDataFromLocalstorage function
+      if(confirm("Are you sure you want to delete all the chats?")) {
+          localStorage.removeItem("all-chats");
+          loadDataFromLocalstorage();
+      }
+  });
+ 
+  listButton.addEventListener("click", () => {
+    // Remove the chats from local storage and call loadDataFromLocalstorage function
+    document.getElementById('suggestionPopup').style.display = 'block';
+    
+});
+
+  themeButton.addEventListener("click", () => {
+      // Toggle body's class for the theme mode and save the updated theme to the local storage 
+      document.body.classList.toggle("light-mode");
+      localStorage.setItem("themeColor", themeButton.innerText);
+      themeButton.innerText = document.body.classList.contains("light-mode") ? "dark_mode" : "light_mode";
+  });
+  
+  const initialInputHeight = chatInput.scrollHeight;
+  
+  chatInput.addEventListener("input", () => {   
+      // Adjust the height of the input field dynamically based on its content
+      chatInput.style.height =  `${initialInputHeight}px`;
+      chatInput.style.height = `${chatInput.scrollHeight}px`;
+  });
+  
+  chatInput.addEventListener("keydown", (e) => {
+      // If the Enter key is pressed without Shift and the window width is larger 
+      // than 800 pixels, handle the outgoing chat
+      if (e.key === "Enter" && !e.shiftKey && window.innerWidth > 800) {
+          e.preventDefault();
+          handleSendQuestion();
+      }
+  });
+  
+  loadDataFromLocalstorage();
+  sendButton.addEventListener("click", handleSendQuestion);
+  // Close the chart popup when the close button is clicked
+function closeChartPopup() {
+  debugger;
+  document.getElementById("chartPopup").style.display = "none";
+}
+function updateChartType(chartType) {
+  // Get the chart container
+  // Show loading indicator
+  document.getElementById('loadingIndicator').style.display = "block";
+  const chartContainer = document.getElementById('chartContainer');
+
+  // Clear the existing chart
+  chartContainer.innerHTML = '';
+
+  // Create a new chart based on the selected chart type
+  var chart = new CanvasJS.Chart("chartContainer", {
+      title: {
+          text: "Visual Representation of Data"
+      },
+      data: [{
+          type: chartType,
+          dataPoints: [{
+                  y: 198,
+                  label: "Elavon, Inc"
+              },
+              {
+                  y: 201,
+                  label: "Hewlete Packard Enterprise Company"
+              },
+              {
+                  y: 202,
+                  label: "Amgen. Inc"
+              },
+              {
+                  y: 236,
+                  label: "Abb Ltd"
+              },
+              {
+                  y: 395,
+                  label: "Red Hat Inc"
+              },
+              {
+                  y: 957,
+                  label: "Citrix Systems Inc"
+              }
+          ]
+      }]
+  });
+
+  chart.render();
+  // Hide loading indicator after chart rendering is complete
+ // chartPopup.onload = function() {
+  document.getElementById('loadingIndicator').style.display = "none";
+//};
+}
+
+function showChart(key) {
+  console.log("Showchart called");
+  debugger;
+  // Get the chart container for the specified key
+  document.getElementById('loadingIndicator').style.display = "block";
+  const chartContainer = document.getElementById('chartPopup');
+  if (chartContainer) {
+    // Show the chart container
+    chartContainer.style.display = "block";
+    
+    var chart = new CanvasJS.Chart("chartContainer",
+    {
+      title:{
+        text: "Visual Representation of Data"
+      },
+       dataPoints: [{
+        y: 198,
+        label: "Elavon, Inc"
+    },
+    {
+        y: 201,
+        label: "Hewlete Packard Enterprise Company"
+    },
+    {
+        y: 202,
+        label: "Amgen. Inc"
+    },
+    {
+        y: 236,
+        label: "Abb Ltd"
+    },
+    {
+        y: 395,
+        label: "Red Hat Inc"
+    },
+    {
+        y: 957,
+        label: "Citrix Systems Inc"
+    }
+]
+  
+    });
+
+chart.render();
+// Hide loading indicator after chart rendering is complete
+///chartPopup.renderComplete  = function() {
+  document.getElementById('loadingIndicator').style.display = "none";
+//};
+
+
+
+    // Add your chart rendering logic here
+  }
+}
+// Function to open the suggestion popup
+
+  // When the button is clicked, show the chart popup
+  //document.getElementById("showChartButton").addEventListener("click", function() {
+  // Get the button and chart popup elements
+ //showChartButton = document.getElementById("showChartButton");
+ //chartPopup = document.getElementById("chartPopup");
+ //document.getElementById("chartPopup").style.display = "block";
+//});
+  </script>
+</body>
+</html>
